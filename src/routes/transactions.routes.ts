@@ -1,12 +1,17 @@
 import { Router } from 'express';
+import multer from 'multer';
+
 import { getCustomRepository, getRepository } from 'typeorm';
 import Transaction from '../models/Transaction';
-import Category from '../models/Category';
 
 import TransactionsRepository from '../repositories/TransactionsRepository';
 import CreateTransactionService from '../services/CreateTransactionService';
-// import DeleteTransactionService from '../services/DeleteTransactionService';
-// import ImportTransactionsService from '../services/ImportTransactionsService';
+import DeleteTransactionService from '../services/DeleteTransactionService';
+import ImportTransactionsService from '../services/ImportTransactionsService';
+
+import uploadConfig from '../config/upload';
+
+const upload = multer(uploadConfig);
 
 const transactionsRouter = Router();
 
@@ -18,12 +23,9 @@ transactionsRouter.get('/', async (request, response) => {
 
     const transactionRepository = getRepository(Transaction);
     
-    const transaction = await transactionRepository.find();
+    const transactions = await transactionRepository.find();
 
-    const categoryRepository = getRepository(Category);
-    const category = await categoryRepository.find();
-
-    return response.json({ transaction, category, balance });
+    return response.json({ transactions, balance });
 });
 
 transactionsRouter.post('/', async (request, response) => {
@@ -42,11 +44,21 @@ transactionsRouter.post('/', async (request, response) => {
 });
 
 transactionsRouter.delete('/:id', async (request, response) => {
-  // TODO
+  const { id } = request.params;
+
+  const deleteTransaction = new DeleteTransactionService();
+
+  await deleteTransaction.execute(id);
+
+  response.status(204).send()
 });
 
-transactionsRouter.post('/import', async (request, response) => {
-  // TODO
+transactionsRouter.post('/import', upload.single('file'), async (request, response) => {
+  const importTransactions = new ImportTransactionsService();
+
+  const transaction = await importTransactions.execute(request.file.path);
+
+  return response.json(transaction);
 });
 
 export default transactionsRouter;

@@ -16,21 +16,25 @@ class TransactionsRepository extends Repository<Transaction> {
     const { income, outcome } = (transaction).reduce((accumulator:Balance, transaction:Transaction) => {
       switch (transaction.type){
         case 'income':
-          accumulator.income += transaction.value;
+          accumulator.income += Number(transaction.value);
           break;
         case 'outcome':
-          accumulator.outcome += transaction.value;
+          accumulator.outcome += Number(transaction.value);
           break;
         default:
           break;
       }
       return accumulator;
-    }, {
+    }, 
+    {
       income: 0,
       outcome: 0,
       total: 0
-    });
-    return { income, outcome, total: income - outcome}
+    },
+    );
+    const total = income - outcome;
+
+    return { income, outcome, total}
   }
 }
 
